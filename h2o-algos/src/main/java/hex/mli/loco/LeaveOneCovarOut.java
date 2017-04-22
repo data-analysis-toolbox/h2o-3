@@ -56,6 +56,7 @@ public class LeaveOneCovarOut extends Iced {
         Log.info("Finished Leave One Covariate Out (LOCO) analysis for model " + m._key + " and frame " + fr._key +
                 " in " + (System.currentTimeMillis()-start)/1000. + " seconds for " + (predictors.length-1) + " columns");
 
+        DKV.put(locoAnalysisFrame);
         return locoAnalysisFrame;
 
     }
@@ -81,7 +82,8 @@ public class LeaveOneCovarOut extends Iced {
         public void compute2() {
             if(_model._output.getModelCategory() == ModelCategory.Multinomial){
                 Vec[] predTmp = getNewPredictions(_model,_frame,_predictor,_replaceVal);
-                _result = new MultiDiffTask(_model._output.nclasses()).doAll(Vec.T_NUM, new Frame().add(_locoFrame).add(new Frame(predTmp))).outputFrame().vecs();
+                Frame tmpFrame = new Frame().add(_locoFrame).add(new Frame(predTmp));
+                _result = new MultiDiffTask(_model._output.nclasses()).doAll(Vec.T_NUM, tmpFrame).outputFrame().vecs();
                 for (Vec v : predTmp) v.remove();
             } else {
                 _result = getNewPredictions(_model, _frame, _predictor,_replaceVal);
@@ -142,7 +144,9 @@ public class LeaveOneCovarOut extends Iced {
                 modifiedPredictionsFr.delete();
                 return new Vec[] {modifiedPrediction};
             } else if(m._output.getModelCategory() == ModelCategory.Multinomial){
-                return modifiedPredictionsFr.vecs();
+                Vec[] vecs = modifiedPredictionsFr.vecs();
+                DKV.remove(modifiedPredictionsFr._key);
+                return vecs;
             } else {
                 Vec modifiedPrediction = modifiedPredictionsFr.remove(0);
                 modifiedPredictionsFr.delete();

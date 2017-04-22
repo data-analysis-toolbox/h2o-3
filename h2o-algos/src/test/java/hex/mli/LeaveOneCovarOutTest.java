@@ -71,14 +71,11 @@ public class LeaveOneCovarOutTest extends TestUtil {
             GBM job = new GBM(parms);
             gbm = job.trainModel().get();
 
-            // Done building model; produce a score column with predictions
-            fr2 = gbm.score(fr);
             loco = LeaveOneCovarOut.leaveOneCovarOut(gbm,fr,job._job,null);
             return loco;
 
         } finally {
             if( fr  != null ) fr.remove();
-            if( fr2 != null ) fr2.remove();
             if( gbm != null ) gbm.delete();
             if( loco != null ) loco.remove();
             Scope.exit();
